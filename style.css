@@ -1,14 +1,10 @@
 body {
   font-family: sans-serif;
-  background: #f0f4f8;
-  color: #333;
   text-align: center;
-  padding: 20px;
+  padding: 40px;
+  background: #f0f0f0;
 }
-
-#game-list a {
-  display: block;
-  margin: 10px;
-  text-decoration: none;
-  color: blue;
+button {
+  padding: 10px 20px;
+  font-size: 18px;
 }
