@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Floating Advertisement System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .demo-content {
+            margin: 40px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        /* Floating Ad Bars */
+        .floating-ad {
+            position: fixed;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+
+        .floating-ad:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .floating-ad.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-20px);
+        }
+
+        /* Bottom Banner Ad */
+        .floating-ad.bottom-banner {
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            min-height: 90px;
+            padding: 15px;
+            border-radius: 0;
+            border-top: 3px solid #667eea;
+        }
+
+        /* Left Sidebar Ad */
+        .floating-ad.left-sidebar {
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 160px;
+            min-height: 600px;
+            padding: 15px;
+            border-radius: 0 15px 15px 0;
+            border-right: 3px solid #667eea;
+        }
+
+        /* Right Sidebar Ad */
+        .floating-ad.right-sidebar {
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 160px;
+            min-height: 600px;
+            padding: 15px;
+            border-radius: 15px 0 0 15px;
+            border-left: 3px solid #667eea;
+        }
+
+        .ad-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .ad-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .ad-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #999;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .ad-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .ad-content {
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px dashed #ddd;
+            color: #666;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .ad-content.has-content {
+            background: transparent;
+            border: none;
+            padding: 0;
+        }
+
+        /* Admin Panel */
+        .admin-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 350px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 2000;
+            transition: all 0.3s ease;
+        }
+
+        .admin-panel.collapsed {
+            width: 60px;
+            height: 60px;
+            overflow: hidden;
+            padding: 15px;
+        }
+
+        .admin-toggle {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .admin-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .admin-content {
+            margin-top: 40px;
+        }
+
+        .admin-panel.collapsed .admin-content {
+            display: none;
+        }
+
+        .admin-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .admin-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: monospace;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .floating-ad.left-sidebar,
+            .floating-ad.right-sidebar {
+                width: 120px;
+                min-height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .floating-ad.left-sidebar,
+            .floating-ad.right-sidebar {
+                width: 80px;
+                min-height: 300px;
+                padding: 10px;
+            }
+
+            .admin-panel {
+                width: 90%;
+                right: 5%;
+                left: 5%;
+            }
+
+            .admin-panel.collapsed {
+                width: 60px;
+                right: 20px;
+                left: auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .floating-ad.left-sidebar,
+            .floating-ad.right-sidebar {
+                display: none;
+            }
+
+            .floating-ad.bottom-banner {
+                min-height: 70px;
+                padding: 10px;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Content -->
+    <div class="main-content">
+        <h1>🚀 Floating Advertisement System</h1>
+        
+        <div class="demo-content">
+            <h2>Welcome to the Advanced Floating Ad System</h2>
+            <p>This system provides three strategically positioned floating advertisement containers that can be easily configured with Google AdSense or any other ad network without requiring any coding knowledge.</p>
+            
+            <h3>Features:</h3>
+            <ul>
+                <li>✅ Three floating ad positions: Bottom Banner, Left Sidebar, and Right Sidebar</li>
+                <li>✅ Easy Google AdSense integration - just paste your ad code</li>
+                <li>✅ Real-time preview and configuration</li>
+                <li>✅ Responsive design for all devices</li>
+                <li>✅ Non-intrusive user experience</li>
+                <li>✅ Local storage for settings persistence</li>
+            </ul>
+            
+            <p>Use the admin panel on the right to configure your advertisements. Simply paste your Google AdSense code or any other ad network code into the respective fields and see the changes in real-time!</p>
+            
+            <div style="height: 800px; background: linear-gradient(45deg, #f0f2f5, #e1e5e9); margin: 20px 0; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #666;">
+                <div style="text-align: center;">
+                    <h3>Demo Content Area</h3>
+                    <p>This represents your website content.<br>The floating ads will not interfere with your content.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Advertisement Bars -->
+    <div id="bottomAd" class="floating-ad bottom-banner">
+        <div class="ad-header">
+            <span class="ad-label">Advertisement</span>
+            <button class="ad-close" onclick="hideAd('bottomAd')">&times;</button>
+        </div>
+        <div class="ad-content" id="bottomAdContent">
+            Bottom Banner Ad - Configure in Admin Panel
+        </div>
+    </div>
+
+    <div id="leftSidebarAd" class="floating-ad left-sidebar">
+        <div class="ad-header">
+            <span class="ad-label">Ad</span>
+            <button class="ad-close" onclick="hideAd('leftSidebarAd')">&times;</button>
+        </div>
+        <div class="ad-content" id="leftSidebarAdContent">
+            Left Sidebar Ad - Configure in Admin Panel
+        </div>
+    </div>
+
+    <div id="rightSidebarAd" class="floating-ad right-sidebar">
+        <div class="ad-header">
+            <span class="ad-label">Ad</span>
+            <button class="ad-close" onclick="hideAd('rightSidebarAd')">&times;</button>
+        </div>
+        <div class="ad-content" id="rightSidebarAdContent">
+            Right Sidebar Ad - Configure in Admin Panel
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="admin-panel">
+        <button class="admin-toggle" onclick="toggleAdminPanel()">⚙️</button>
+        
+        <div class="admin-content">
+            <h2 style="color: #333; margin-bottom: 20px; font-size: 18px;">Ad Configuration</h2>
+            
+            <!-- Bottom Banner Configuration -->
+            <div class="admin-section">
+                <h3>🔽 Bottom Banner Ad</h3>
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="bottomAdEnabled" checked onchange="toggleAd('bottomAd', this.checked)">
+                        <label for="bottomAdEnabled">Enable Bottom Banner</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="bottomAdCode">Ad Code (Paste your AdSense or ad network code):</label>
+                    <textarea id="bottomAdCode" placeholder="Paste your Google AdSense code here..."></textarea>
+                </div>
+                <button class="btn" onclick="updateAd('bottom')">Update Bottom Ad</button>
+            </div>
+
+            <!-- Left Sidebar Configuration -->
+            <div class="admin-section">
+                <h3>⬅️ Left Sidebar Ad</h3>
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="leftSidebarAdEnabled" checked onchange="toggleAd('leftSidebarAd', this.checked)">
+                        <label for="leftSidebarAdEnabled">Enable Left Sidebar</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="leftSidebarAdCode">Ad Code:</label>
+                    <textarea id="leftSidebarAdCode" placeholder="Paste your Google AdSense code here..."></textarea>
+                </div>
+                <button class="btn" onclick="updateAd('leftSidebar')">Update Left Sidebar Ad</button>
+            </div>
+
+            <!-- Right Sidebar Configuration -->
+            <div class="admin-section">
+                <h3>➡️ Right Sidebar Ad</h3>
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="rightSidebarAdEnabled" checked onchange="toggleAd('rightSidebarAd', this.checked)">
+                        <label for="rightSidebarAdEnabled">Enable Right Sidebar</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="rightSidebarAdCode">Ad Code:</label>
+                    <textarea id="rightSidebarAdCode" placeholder="Paste your Google AdSense code here..."></textarea>
+                </div>
+                <button class="btn" onclick="updateAd('rightSidebar')">Update Right Sidebar Ad</button>
+            </div>
+
+            <!-- Global Controls -->
+            <div class="admin-section">
+                <h3>🌐 Global Controls</h3>
+                <button class="btn" onclick="saveAllSettings()">💾 Save All Settings</button>
+                <button class="btn btn-secondary" onclick="loadSettings()">🔄 Load Saved Settings</button>
+                <button class="btn btn-secondary" onclick="resetAllAds()">🗑️ Reset All Ads</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let adminPanelCollapsed = false;
+        
+        // Initialize the system
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            initializeAdSenseScript();
+        });
+
+        // Initialize Google AdSense script
+        function initializeAdSenseScript() {
+            if (!document.querySelector('script[src*="adsbygoogle"]')) {
+                const script = document.createElement('script');
+                script.async = true;
+                script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
+                document.head.appendChild(script);
+            }
+        }
+
+        // Toggle admin panel
+        function toggleAdminPanel() {
+            const panel = document.getElementById('adminPanel');
+            adminPanelCollapsed = !adminPanelCollapsed;
+            
+            if (adminPanelCollapsed) {
+                panel.classList.add('collapsed');
+            } else {
+                panel.classList.remove('collapsed');
+            }
+        }
+
+        // Hide specific ad
+        function hideAd(adId) {
+            const ad = document.getElementById(adId);
+            ad.classList.add('hidden');
+
+            // Update checkbox state
+            let checkboxId = adId.replace('Ad', 'AdEnabled');
+            if (adId === 'leftSidebarAd') {
+                checkboxId = 'leftSidebarAdEnabled';
+            } else if (adId === 'rightSidebarAd') {
+                checkboxId = 'rightSidebarAdEnabled';
+            }
+
+            const checkbox = document.getElementById(checkboxId);
+            if (checkbox) {
+                checkbox.checked = false;
+            }
+
+            saveSettings();
+        }
+
+        // Toggle ad visibility
+        function toggleAd(adId, enabled) {
+            const ad = document.getElementById(adId);
+            
+            if (enabled) {
+                ad.classList.remove('hidden');
+            } else {
+                ad.classList.add('hidden');
+            }
+            
+            saveSettings();
+        }
+
+        // Update ad content
+        function updateAd(position) {
+            const codeTextarea = document.getElementById(position + 'AdCode');
+            const contentDiv = document.getElementById(position + 'AdContent');
+            const adCode = codeTextarea.value.trim();
+            
+            if (adCode) {
+                // Show loading
+                contentDiv.innerHTML = '<div class="loading"></div> Loading ad...';
+                contentDiv.classList.add('has-content');
+                
+                // Simulate loading delay for better UX
+                setTimeout(() => {
+                    contentDiv.innerHTML = adCode;
+                    
+                    // If it's AdSense code, try to initialize it
+                    if (adCode.includes('adsbygoogle')) {
+                        try {
+                            (adsbygoogle = window.adsbygoogle || []).push({});
+                        } catch (e) {
+                            console.log('AdSense initialization:', e);
+                        }
+                    }
+                    
+                    showMessage('success', position.charAt(0).toUpperCase() + position.slice(1) + ' ad updated successfully!');
+                }, 1000);
+            } else {
+                contentDiv.innerHTML = position.charAt(0).toUpperCase() + position.slice(1) + ' Ad - Configure in Admin Panel';
+                contentDiv.classList.remove('has-content');
+                showMessage('error', 'Please enter ad code before updating.');
+            }
+            
+            saveSettings();
+        }
+
+        // Show success/error messages
+        function showMessage(type, message) {
+            // Remove existing messages
+            const existingMessages = document.querySelectorAll('.success-message, .error-message');
+            existingMessages.forEach(msg => msg.remove());
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'success' ? 'success-message' : 'error-message';
+            messageDiv.textContent = message;
+            
+            // Add to admin panel
+            const adminContent = document.querySelector('.admin-content');
+            adminContent.appendChild(messageDiv);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
+
+        // Save all settings to localStorage
+        function saveAllSettings() {
+            saveSettings();
+            showMessage('success', 'All settings saved successfully!');
+        }
+
+        // Save settings to localStorage
+        function saveSettings() {
+            const settings = {
+                bottomAdEnabled: document.getElementById('bottomAdEnabled').checked,
+                bottomAdCode: document.getElementById('bottomAdCode').value,
+                leftSidebarAdEnabled: document.getElementById('leftSidebarAdEnabled').checked,
+                leftSidebarAdCode: document.getElementById('leftSidebarAdCode').value,
+                rightSidebarAdEnabled: document.getElementById('rightSidebarAdEnabled').checked,
+                rightSidebarAdCode: document.getElementById('rightSidebarAdCode').value,
+                bottomAdHidden: document.getElementById('bottomAd').classList.contains('hidden'),
+                leftSidebarAdHidden: document.getElementById('leftSidebarAd').classList.contains('hidden'),
+                rightSidebarAdHidden: document.getElementById('rightSidebarAd').classList.contains('hidden')
+            };
+
+            localStorage.setItem('floatingAdsSettings', JSON.stringify(settings));
+        }
+
+        // Load settings from localStorage
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('floatingAdsSettings');
+
+            if (savedSettings) {
+                const settings = JSON.parse(savedSettings);
+
+                // Load checkbox states
+                document.getElementById('bottomAdEnabled').checked = settings.bottomAdEnabled !== false;
+                document.getElementById('leftSidebarAdEnabled').checked = settings.leftSidebarAdEnabled !== false;
+                document.getElementById('rightSidebarAdEnabled').checked = settings.rightSidebarAdEnabled !== false;
+
+                // Load ad codes
+                document.getElementById('bottomAdCode').value = settings.bottomAdCode || '';
+                document.getElementById('leftSidebarAdCode').value = settings.leftSidebarAdCode || '';
+                document.getElementById('rightSidebarAdCode').value = settings.rightSidebarAdCode || '';
+
+                // Apply visibility states
+                toggleAd('bottomAd', settings.bottomAdEnabled !== false && !settings.bottomAdHidden);
+                toggleAd('leftSidebarAd', settings.leftSidebarAdEnabled !== false && !settings.leftSidebarAdHidden);
+                toggleAd('rightSidebarAd', settings.rightSidebarAdEnabled !== false && !settings.rightSidebarAdHidden);
+
+                // Update ad content if codes exist
+                if (settings.bottomAdCode) {
+                    document.getElementById('bottomAdContent').innerHTML = settings.bottomAdCode;
+                    document.getElementById('bottomAdContent').classList.add('has-content');
+                }
+                if (settings.leftSidebarAdCode) {
+                    document.getElementById('leftSidebarAdContent').innerHTML = settings.leftSidebarAdCode;
+                    document.getElementById('leftSidebarAdContent').classList.add('has-content');
+                }
+                if (settings.rightSidebarAdCode) {
+                    document.getElementById('rightSidebarAdContent').innerHTML = settings.rightSidebarAdCode;
+                    document.getElementById('rightSidebarAdContent').classList.add('has-content');
+                }
+            }
+        }
+
+        // Reset all ads
+        function resetAllAds() {
+            if (confirm('Are you sure you want to reset all ad configurations? This will clear all saved settings.')) {
+                // Clear localStorage
+                localStorage.removeItem('floatingAdsSettings');
+
+                // Reset form fields
+                document.getElementById('bottomAdCode').value = '';
+                document.getElementById('leftSidebarAdCode').value = '';
+                document.getElementById('rightSidebarAdCode').value = '';
+
+                // Reset checkboxes
+                document.getElementById('bottomAdEnabled').checked = true;
+                document.getElementById('leftSidebarAdEnabled').checked = true;
+                document.getElementById('rightSidebarAdEnabled').checked = true;
+
+                // Reset ad content
+                document.getElementById('bottomAdContent').innerHTML = 'Bottom Banner Ad - Configure in Admin Panel';
+                document.getElementById('leftSidebarAdContent').innerHTML = 'Left Sidebar Ad - Configure in Admin Panel';
+                document.getElementById('rightSidebarAdContent').innerHTML = 'Right Sidebar Ad - Configure in Admin Panel';
+
+                // Remove has-content class
+                document.getElementById('bottomAdContent').classList.remove('has-content');
+                document.getElementById('leftSidebarAdContent').classList.remove('has-content');
+                document.getElementById('rightSidebarAdContent').classList.remove('has-content');
+
+                // Show all ads
+                document.getElementById('bottomAd').classList.remove('hidden');
+                document.getElementById('leftSidebarAd').classList.remove('hidden');
+                document.getElementById('rightSidebarAd').classList.remove('hidden');
+
+                showMessage('success', 'All ads have been reset successfully!');
+            }
+        }
+
+        // Handle window resize for responsive behavior
+        window.addEventListener('resize', function() {
+            // Auto-hide sidebars on mobile
+            const leftSidebar = document.getElementById('leftSidebarAd');
+            const rightSidebar = document.getElementById('rightSidebarAd');
+            if (window.innerWidth <= 480) {
+                leftSidebar.style.display = 'none';
+                rightSidebar.style.display = 'none';
+            } else {
+                leftSidebar.style.display = 'block';
+                rightSidebar.style.display = 'block';
+            }
+        });
+
+        // Initialize responsive behavior
+        window.addEventListener('load', function() {
+            if (window.innerWidth <= 480) {
+                document.getElementById('leftSidebarAd').style.display = 'none';
+                document.getElementById('rightSidebarAd').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
